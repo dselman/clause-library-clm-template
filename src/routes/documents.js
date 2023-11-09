@@ -27,8 +27,10 @@ router.get("/:documentId/mergeData", (req, res) => {
   const C1 = `<p>This is <strong>a strong</strong> statement.</p>`;
   const C2 = `<p>This is <em>an emphatic</em> statement.</p>`;
 
-  res.send(`<Clauses>
+  res.send(`<root>
+<Clauses>
 <One>${escapeXml(C1)}</One>
 <Two>${escapeXml(C2)}</Two>
-</Clauses>`);
+</Clauses>
+</root>`);
 });
