@@ -21,6 +21,7 @@ function escapeXml(unsafe) {
 }
 
 router.get("/:documentId/mergeData", (req, res) => {
+  console.log(`Generating mergeData for document ${req.params.documentId}`);
   res.setHeader("content-type", "text/xml");
 
   const C1 = `<p>This is <strong>a strong</strong> statement.</p>`;
