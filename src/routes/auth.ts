@@ -123,7 +123,6 @@ export async function getUserAccessToken(code: string) {
 checkEnv("SERVER_URL");
 checkEnv("CLIENT_ID");
 checkEnv("PRIVATE_KEY");
-checkEnv("EXPIRES_IN");
 checkEnv("BASE_PATH");
 checkEnv("SECRET_KEY");
 checkEnv("USER_ID");
