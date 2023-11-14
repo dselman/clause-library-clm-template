@@ -128,7 +128,7 @@ checkEnv("SECRET_KEY");
 checkEnv("USER_ID");
 checkEnv("REDIRECT_URL");
 
-const SCOPES = process.env.SCOPES ? process.env.SCOPES :
+const SCOPES = /*process.env.SCOPES ? process.env.SCOPES :*/
    "signature impersonation extended spring_read models_read models_write adm_entity_esign_read adm_entity_esign_write";
 
 router.get("/login", async (req, res) => {
@@ -145,7 +145,7 @@ router.get("/login", async (req, res) => {
   authorizationUri.searchParams.set('scope', SCOPES);
   authorizationUri.searchParams.set('redirect_uri', redirectUri.toString());
   authorizationUri.searchParams.set('response_type', 'code');
-  authorizationUri.searchParams.set('response_mode', 'query');
+  // authorizationUri.searchParams.set('response_mode', 'query');
   authorizationUri.searchParams.set('state', 'foo');
   res.redirect(authorizationUri.toString());
 });
