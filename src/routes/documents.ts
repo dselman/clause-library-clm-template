@@ -1,6 +1,6 @@
 import express from "express";
 
-import { checkEnv, getAccessTokenFromRefreshToken } from "./auth.js";
+import { checkEnv, getAccessToken } from "./auth.js";
 import { DocumentGenerator } from "./document-generator.js";
 
 const router = express.Router();
@@ -45,7 +45,7 @@ router.post("/documents/:documentId/mergeData", async (req, res) => {
 
     const bearerToken = authHeader.substring('Bearer '.length);
     console.log(bearerToken);
-    const accessToken = await getAccessTokenFromRefreshToken(bearerToken);
+    const accessToken = await getAccessToken(bearerToken);
 
     // get the default account id for the user
     const useInfoResponse = await fetch(`https://${process.env.BASE_PATH}/oauth/userinfo`, {
