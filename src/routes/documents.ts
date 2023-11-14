@@ -6,7 +6,7 @@ import { DocumentGenerator } from "./document-generator.js";
 const router = express.Router();
 export { router as DocumentsRouter };
 
-checkEnv("CONTENT_URL");
+checkEnv("CLM_CONTENT_URL");
 checkEnv("ACCOUNT_ID");
 
 function replacer(substring: string): string {
@@ -70,7 +70,7 @@ router.post("/documents/:documentId/mergeData", async (req, res) => {
     const account = defaultAccounts[0];
 
     console.log(`User ${userInfo.sub} in account ${account.account_id} is generating mergeData for document ${req.params.documentId}`);
-    const documentUrl = `${process.env.CONTENT_URL}/v2/${account.account_id}/documents/${req.params.documentId}`
+    const documentUrl = `${process.env.CLM_CONTENT_URL}/v2/${account.account_id}/documents/${req.params.documentId}`
     const options = {
       method: "GET",
       headers: {
