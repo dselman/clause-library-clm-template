@@ -1,7 +1,3 @@
-export function test() {
-    console.log('foo');
-}
-
 export const WORKFLOW = {
     "cells": [
         {
@@ -60,7 +56,7 @@ export const WORKFLOW = {
                 "type": "String",
                 "value": "Link 1"
             },
-            "vertices": [],
+            "vertices": [] as object[],
             "description": {
                 "type": "String",
                 "value": ""

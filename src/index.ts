@@ -3,7 +3,7 @@ const app = express();
 
 import { AuthRouter } from "./routes/auth.js";
 import { DocumentsRouter } from "./routes/documents.js";
-app.use("/documents", DocumentsRouter);
+app.use("/", DocumentsRouter);
 app.use("/auth", AuthRouter);
 
 const port = process.env.PORT || 3000;
