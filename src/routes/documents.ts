@@ -9,7 +9,7 @@ export { router as DocumentsRouter };
 checkEnv("CONTENT_URL");
 checkEnv("ACCOUNT_ID");
 
-function replacer(substring: string) : string {
+function replacer(substring: string): string {
   switch (substring) {
     case "<":
       return "&lt;";
@@ -25,19 +25,19 @@ function replacer(substring: string) : string {
   return substring;
 }
 
-function escapeXml(unsafe:string) {
+function escapeXml(unsafe: string) {
   return unsafe.replace(/[<>&'"]/g, replacer);
 }
 
 router.post("/documents/:documentId/mergeData", async (req, res) => {
   const authHeader = req.header('Authorization');
   try {
-    if(!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(403);
       throw new Error('Authorization Bearer token is missing');
     }
 
-    if(!req.params.documentId) {
+    if (!req.params.documentId) {
       res.status(400);
       throw new Error('DocumentId is missing');
     }
@@ -56,14 +56,14 @@ router.post("/documents/:documentId/mergeData", async (req, res) => {
       }
     });
 
-    if(!useInfoResponse.ok) {
+    if (!useInfoResponse.ok) {
       throw new Error('Failed to get user info');
     }
 
     const userInfo = await useInfoResponse.json();
-    const defaultAccounts = Array.isArray(userInfo?.accounts) ? userInfo?.accounts.filter( a => a.is_default) : [];
+    const defaultAccounts = Array.isArray(userInfo?.accounts) ? userInfo?.accounts.filter(a => a.is_default) : [];
 
-    if(defaultAccounts.length < 1) {
+    if (defaultAccounts.length < 1) {
       throw new Error('Did not find default account');
     }
 
@@ -79,27 +79,45 @@ router.post("/documents/:documentId/mergeData", async (req, res) => {
     };
 
     const response = await fetch(documentUrl, options);
-    if(!response.ok) {
+    if (!response.ok) {
       throw new Error(`Failed to load document ${response.status} ${response.statusText}`);
     }
     const docBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(docBuffer);
     const documentGenerator = new DocumentGenerator(account.account_id, accessToken);
     const result = await documentGenerator.generate(buffer, data, 'html');
-    console.log(JSON.stringify(result));
+
+    let xml = `<root>
+   <Clauses>`;
+    result.forEach(r => {
+      if (Array.isArray(r.results)) {
+        if(r.results.length > 0) {
+          xml += `<${r.query.type}>`;
+          if(r.query.tagId) {
+            xml += `<${r.query.tagId}>`;
+          }
+          xml += escapeXml(r.results[0].content);
+          if(r.query.tagId) {
+            xml += `</${r.query.tagId}>`;
+          }
+          xml += `</${r.query.type}>`;
+        }
+        else {
+          xml += `<${r.query.type}></${r.query.type}>`
+        }
+      }
+      else {
+        xml += `<${r.query.type}>${escapeXml(r.results.error)}</${r.query.type}>`
+      }
+    })
+
+    xml += `   </Clauses>
+</root>`
 
     res.setHeader("content-type", "text/xml");
-    const C1 = `<p>This is <strong>a strong</strong> statement.</p>`;
-    const C2 = `<p>This is <em>an emphatic</em> statement.</p>`;
-
-    res.send(`<root>
-  <Clauses>
-  <One>${escapeXml(C1)}</One>
-  <Two>${escapeXml(C2)}</Two>
-  </Clauses>
-  </root>`);
+    res.send(xml);
   }
-  catch(err) {
+  catch (err) {
     res.status(500);
     res.end();
     console.log(err);

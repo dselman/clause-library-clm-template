@@ -1,4 +1,4 @@
-import { DOMParser } from '@xmldom/xmldom';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import * as xpath from 'xpath';
 import { default as JsZip } from 'jszip';
 import { checkEnv } from './auth.js';
@@ -10,23 +10,24 @@ checkEnv("CLAUSE_LIBRARY_URL");
 
 type ClauseQuery = {
     type: string;
+    tagId?: string;
     query: string | null | undefined;
     version: string | null | undefined;
     modifier: string | null | undefined;
 }
 
 export type ClauseContent = {
-    contents: string[];
+    content: string;
     templateId?: string;
 }
 
 export type ClauseQueryError = {
-    error?: string;
+    error: string;
 }
 
 export type ClauseQueryResult = {
     query: ClauseQuery;
-    results: ClauseContent | ClauseQueryError;
+    results: ClauseContent[] | ClauseQueryError;
 }
 
 export type TemplateData = Record<string, unknown>;
@@ -81,13 +82,17 @@ function getClauseQuery(paraAsText: string): ClauseQuery | undefined {
         const richText = richTexts.length > 0 ? richTexts[0] : null;
         if (richText) {
             const select = richText.getAttribute('Select');
-            const type = select?.startsWith(CLAUSE_PREFIX) ? select?.substring(CLAUSE_PREFIX.length) : null;
+            const typePlusTagId = select?.startsWith(CLAUSE_PREFIX) ? select?.substring(CLAUSE_PREFIX.length) : null;
+            const firstSlash = typePlusTagId?.indexOf('/');
+            const type = firstSlash && firstSlash > 0 ? typePlusTagId?.substring(0,firstSlash) : typePlusTagId;
+            const tagId = firstSlash && firstSlash > 0 ? typePlusTagId?.substring(firstSlash+1) : undefined;
             const query = richText.getAttribute('Query');
             const version = richText.getAttribute('Version');
             const modifier = richText.getAttribute('Modifier');
             if (type) {
                 return {
                     type,
+                    tagId,
                     query,
                     version,
                     modifier
@@ -97,6 +102,40 @@ function getClauseQuery(paraAsText: string): ClauseQuery | undefined {
     }
 
     return undefined;
+}
+
+function firstElement(parentNode:Node) {
+    const elements:Array<ChildNode> = [];
+    for(let n=0; n < parentNode?.childNodes.length; n++) {
+        const node = parentNode.childNodes.item(n);
+        if(node.nodeType === node.ELEMENT_NODE) {
+            elements.push(node);
+        }
+    }
+    return elements.length > 0 ? elements[0] : undefined;
+}
+
+/**
+ * Removes HTML prolog attributes from clause content. CLM Doc Gen
+ * seems to struggle with these...
+ * @param item the clause content item to be processed
+ * @returns a new clause content item with HTML prolog removed from content
+ */
+function cleanContent(item: ClauseContent): ClauseContent {
+    const domparser = new DOMParser();
+    const contentDoc = domparser.parseFromString(item.content, 'text/html');
+    const bodies = contentDoc.getElementsByTagName('body');
+    const firstBody = (bodies && bodies.length > 0) ? bodies.item(0) : null;
+    const divChild = firstBody ? firstElement(firstBody) : null;
+    if (divChild) {
+        const serialized = new XMLSerializer().serializeToString(divChild);
+        return {
+            content: serialized,
+            templateId: item.templateId,
+        }
+    } else {
+        return item;
+    }
 }
 
 /**
@@ -135,34 +174,34 @@ export class DocumentGenerator {
             }
         }
 
-        queries.forEach( q => {
+        queries.forEach(q => {
             const version = q.version ? `@${q.version}` : '';
             console.log(`Found query: ${q.type}${version}(${q.query})${q.modifier}`);
         })
 
-        const result:Array<ClauseQueryResult> = [];
+        const result: Array<ClauseQueryResult> = [];
 
-        for(let n=0; n < queries.length; n++) {
+        for (let n = 0; n < queries.length; n++) {
             const query = queries[n];
             try {
                 const response = await generateContent(this.accountId, this.bearerToken, query, format, data);
-                if(response.ok) {
+                if (response.ok) {
                     const content = await response.json();
-                    result.push( {
+                    result.push({
                         query,
-                        results: content
-                    });    
-                }else {
-                    result.push( {
+                        results: content.results.map(cleanContent)
+                    });
+                } else {
+                    result.push({
                         query,
-                        results: {error: `Failed to get content ${response.status} ${response.statusText}`}
+                        results: { error: `Failed to get content ${response.status} ${response.statusText}` }
                     });
                 }
             }
-            catch(error) {
-                result.push( {
+            catch (error) {
+                result.push({
                     query,
-                    results: {error: `Failed to get content: ${error}`}
+                    results: { error: `Failed to get content: ${error}` }
                 });
             }
         }
