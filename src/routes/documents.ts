@@ -7,7 +7,6 @@ const router = express.Router();
 export { router as DocumentsRouter };
 
 checkEnv("CLM_CONTENT_URL");
-checkEnv("ACCOUNT_ID");
 
 function replacer(substring: string): string {
   switch (substring) {
