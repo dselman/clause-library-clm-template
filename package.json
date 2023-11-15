@@ -1,10 +1,10 @@
 {
-  "name": "express-simple-template",
+  "name": "clause-library-clm-middleware",
   "version": "1.0.0",
-  "description": "a simple expressjs app",
+  "description": "Integrates Clause Library for DocuSign CLM",
   "main": "dist/index.js",
   "type": "module",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "scripts": {
     "prebuild": "npx eslint .",
     "build": "tsc",

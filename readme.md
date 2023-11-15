@@ -1,15 +1,13 @@
 ---
-title: ExpressJs server
-description: An express server with common examples
+title: Clause Library CLM Middleware
+description: Integrates DocuSign CLM with Clause Library
 tags:
   - http
   - nodejs
   - express
-  - javascript
-  - json
 ---
 
-# NodeJS Express Example
+# Clause Library CLM Middleware
 
 This example starts an [Express JS](https://expressjs.com/) server.
 
