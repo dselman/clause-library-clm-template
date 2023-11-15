@@ -16,6 +16,11 @@ type ClauseQuery = {
     modifier: string | null | undefined;
 }
 
+function queryToString(query:ClauseQuery) : string {
+    const version = query.version ? `@${query.version}` : '';
+    return `${query.type}${version}(${query.query})${query.modifier}`;
+}
+
 export type ClauseContent = {
     content: string;
     templateId?: string;
@@ -51,6 +56,7 @@ async function generateContent(accountId: string, bearerToken: string,
     const modifier = templateQuery.modifier ? `${templateQuery.modifier}` : '';
     const selector = `${templateQuery.type}${version}(${templateQuery.query})${modifier}`;
     const url = `${process.env.CLAUSE_LIBRARY_URL}/accounts/${accountId}/templates/generateContent?format=${format}&selectionQuery=${encodeURIComponent(selector)}`;
+    // console.log(url);
     const res = await fetch(url, {
         method: "POST",
         headers: {
@@ -175,8 +181,7 @@ export class DocumentGenerator {
         }
 
         queries.forEach(q => {
-            const version = q.version ? `@${q.version}` : '';
-            console.log(`Found query: ${q.type}${version}(${q.query})${q.modifier}`);
+            console.log(`Found clause: ${queryToString(q)}`);
         })
 
         const result: Array<ClauseQueryResult> = [];
@@ -194,14 +199,14 @@ export class DocumentGenerator {
                 } else {
                     result.push({
                         query,
-                        results: { error: `Failed to get content ${response.status} ${response.statusText}` }
+                        results: { error: `Clause ${queryToString(query)} failed to get content ${response.status} ${response.statusText}` }
                     });
                 }
             }
             catch (error) {
                 result.push({
                     query,
-                    results: { error: `Failed to get content: ${error}` }
+                    results: { error: `Clause ${queryToString(query)} failed to get content: ${error}` }
                 });
             }
         }

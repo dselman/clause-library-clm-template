@@ -1,7 +1,8 @@
 import express from "express";
+import xmlparser from 'express-xml-bodyparser';
 
 import { checkEnv, getAccessToken } from "./auth.js";
-import { DocumentGenerator } from "./document-generator.js";
+import { ClauseQueryResult, DocumentGenerator } from "./document-generator.js";
 
 const router = express.Router();
 export { router as DocumentsRouter };
@@ -28,7 +29,21 @@ function escapeXml(unsafe: string) {
   return unsafe.replace(/[<>&'"]/g, replacer);
 }
 
-router.post("/documents/:documentId/mergeData", async (req, res) => {
+function buildXml(r:ClauseQueryResult, text:string) : string {
+  let xml = '';
+  xml += `<${r.query.type}>\n`;
+  if(r.query.tagId) {
+    xml += `<${r.query.tagId}>`;
+  }
+  xml += escapeXml(text);
+  if(r.query.tagId) {
+    xml += `</${r.query.tagId}>`;
+  }
+  xml += `</${r.query.type}>\n`;
+  return xml;
+}
+
+router.post("/documents/:documentId/mergeData", xmlparser({trim: false, explicitArray: false}), async (req, res) => {
   const authHeader = req.header('Authorization');
   try {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -41,7 +56,17 @@ router.post("/documents/:documentId/mergeData", async (req, res) => {
       throw new Error('DocumentId is missing');
     }
 
-    const data = req.body?.mergeData ? req.body?.mergeData : {};
+    console.log(JSON.stringify(req.body, null, 2));
+
+    const data = req.body ? req.body : {};
+    // {
+    //   "mergeData": {},
+    //   "mergeOptions": {
+    //     "now": "string",
+    //     "locale": "string"
+    //   },
+    //   "contextData": {}
+    // }
 
     const bearerToken = authHeader.substring('Bearer '.length);
     console.log(bearerToken);
@@ -91,28 +116,21 @@ router.post("/documents/:documentId/mergeData", async (req, res) => {
     result.forEach(r => {
       if (Array.isArray(r.results)) {
         if(r.results.length > 0) {
-          xml += `<${r.query.type}>`;
-          if(r.query.tagId) {
-            xml += `<${r.query.tagId}>`;
-          }
-          xml += escapeXml(r.results[0].content);
-          if(r.query.tagId) {
-            xml += `</${r.query.tagId}>`;
-          }
-          xml += `</${r.query.type}>`;
+          xml += buildXml(r, r.results[0].content);
         }
         else {
           xml += `<${r.query.type}></${r.query.type}>`
         }
       }
       else {
-        xml += `<${r.query.type}>${escapeXml(r.results.error)}</${r.query.type}>`
+        xml += buildXml(r, r.results.error);
       }
     })
 
     xml += `   </Clauses>
 </root>`
 
+    console.log(xml);
     res.setHeader("content-type", "text/xml");
     res.send(xml);
   }
