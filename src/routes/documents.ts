@@ -56,17 +56,20 @@ router.post("/documents/:documentId/mergeData", xmlparser({trim: false, explicit
       throw new Error('DocumentId is missing');
     }
 
-    console.log(JSON.stringify(req.body, null, 2));
+    // build mergeData from body.document.metadata
+    const mergeData = {};
+    req.body?.document?.metadata?.forEach( m => {
+      mergeData[m.field] = m.value;
+    });
 
-    const data = req.body ? req.body : {};
-    // {
-    //   "mergeData": {},
-    //   "mergeOptions": {
-    //     "now": "string",
-    //     "locale": "string"
-    //   },
-    //   "contextData": {}
-    // }
+    console.log('Merge data:');
+    console.log(JSON.stringify(mergeData, null, 2));
+
+    const data = {
+      mergeData,
+      contextData: mergeData,
+      mergeOptions: mergeData
+    };
 
     const bearerToken = authHeader.substring('Bearer '.length);
     console.log(bearerToken);

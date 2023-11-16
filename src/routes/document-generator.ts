@@ -87,14 +87,14 @@ function getClauseQuery(paraAsText: string): ClauseQuery | undefined {
         const richTexts = contentDoc.getElementsByTagName('RichText');
         const richText = richTexts.length > 0 ? richTexts[0] : null;
         if (richText) {
-            const select = richText.getAttribute('Select');
+            const select = richText.getAttribute('Select')?.trim();
             const typePlusTagId = select?.startsWith(CLAUSE_PREFIX) ? select?.substring(CLAUSE_PREFIX.length) : null;
             const firstSlash = typePlusTagId?.indexOf('/');
             const type = firstSlash && firstSlash > 0 ? typePlusTagId?.substring(0,firstSlash) : typePlusTagId;
-            const tagId = firstSlash && firstSlash > 0 ? typePlusTagId?.substring(firstSlash+1) : undefined;
-            const query = richText.getAttribute('Query');
-            const version = richText.getAttribute('Version');
-            const modifier = richText.getAttribute('Modifier');
+            const tagId = firstSlash && firstSlash > 0 ? typePlusTagId?.substring(firstSlash+1).trim() : undefined;
+            const query = richText.getAttribute('Query')?.trim();
+            const version = richText.getAttribute('Version')?.trim();
+            const modifier = richText.getAttribute('Modifier')?.trim();
             if (type) {
                 return {
                     type,
