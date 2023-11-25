@@ -10,7 +10,8 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "neo4j": "docker run --restart always --publish=7474:7474 --publish=7687:7687 --env NEO4J_AUTH=neo4j/onesmallstep --volume=$INIT_CWD/data:/data neo4j:5.13.0-community &"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
