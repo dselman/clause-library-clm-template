@@ -24,6 +24,9 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@accordproject/concerto-codegen": "^3.17.0",
+    "@accordproject/concerto-core": "^3.15.0",
+    "@accordproject/concerto-util": "^3.15.0",
     "@accordproject/markdown-transform": "^0.16.22",
     "@xmldom/xmldom": "^0.8.10",
     "docusign-esign": "^6.5.0",
@@ -31,6 +34,8 @@
     "express-xml-bodyparser": "^0.3.0",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
+    "neogma": "^1.12.3",
+    "uuid": "^9.0.1",
     "xpath": "^0.0.33"
   }
 }

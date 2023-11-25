@@ -3,6 +3,7 @@ import xmlparser from 'express-xml-bodyparser';
 
 import { checkEnv, getAccessToken } from "./auth.js";
 import { ClauseQueryResult, DocumentGenerator } from "./document-generator.js";
+import { addAgreementToGraph, addClauseQueryResultToGraph, initGraph } from "./graph.js";
 
 const router = express.Router();
 export { router as DocumentsRouter };
@@ -112,7 +113,16 @@ router.post("/documents/:documentId/mergeData", xmlparser({trim: false, explicit
     const docBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(docBuffer);
     const documentGenerator = new DocumentGenerator(account.account_id, accessToken);
-    const result = await documentGenerator.generate(buffer, data, 'html');
+    // const result = await documentGenerator.generate(buffer, data, 'html');
+    const result = await documentGenerator.generate(buffer, data, 'markdown');
+
+    // add this agreement to the agreement graph...
+    const markdownResult = result;
+    const context = await initGraph();
+    // await deleteGraph(context);
+    const agreementId = await addAgreementToGraph(context, `Agreement ${new Date().toISOString()}}`, data.mergeData);
+    markdownResult.forEach( r => addClauseQueryResultToGraph(accessToken, account.account_id, context, agreementId, data.mergeData, r));
+    //
 
     let xml = `<root>
    <Clauses>`;
