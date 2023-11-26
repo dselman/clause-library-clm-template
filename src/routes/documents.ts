@@ -120,7 +120,7 @@ router.post("/documents/:documentId/mergeData", xmlparser({trim: false, explicit
     const markdownResult = result;
     const context = await initGraph();
     // await deleteGraph(context);
-    const agreementId = await addAgreementToGraph(context, `Agreement ${new Date().toISOString()}}`, data.mergeData);
+    const agreementId = await addAgreementToGraph(context, `Agreement ${new Date().toISOString()}}`, req.params.documentId, data.mergeData);
     markdownResult.forEach( r => addClauseQueryResultToGraph(accessToken, account.account_id, context, agreementId, data.mergeData, r));
     //
 
